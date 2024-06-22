@@ -1,0 +1,151 @@
+---
+title: "ash945"
+output:
+  html_document: default
+  pdf_document: default
+date: "2024-03-16"
+---
+```{r}
+file_path <- "C:\\Users\\ANU\\Desktop\\stats 779\\auckland-long.csv"
+
+# Read the CSV file into the 'akl' variable
+akl <- read.csv(file_path, header = TRUE)
+
+
+# Question 1: Convert the variables in the data frame such that they are in °C and mm respectively.
+akl$PRCP <- akl$PRCP / 10  # convert precipitation to mm
+akl$TAVG <- akl$TAVG / 10  # convert average temperature to °C
+akl$TMAX <- akl$TMAX / 10  # convert max temperature to °C
+akl$TMIN <- akl$TMIN / 10  # convert min temperature to °C
+
+```
+
+```{r}
+# Question 2: Compute the proportion of missing values for each variable. Compute the range (minimum and maximum) for each variable. Are the ranges plausible?
+missing_prop <- colMeans(is.na(akl))
+
+```
+```{r}
+# Compute range (minimum and maximum) for each variable
+range_values <- sapply(akl[, c("PRCP", "TAVG", "TMAX", "TMIN")], function(x) c(min(x, na.rm = TRUE), max(x, na.rm = TRUE)))
+
+# Print proportion of missing values and range for each variable
+print("Proportion of missing values:")
+print(missing_prop)
+print("Range (minimum and maximum) for each variable:")
+print(range_values)
+
+```
+
+#Answer : 
+#     PRCP TAVG TMAX TMIN
+#[1,]   0.0  4.8  8.6  0.2
+#[2,] 238.5 25.1 29.8 22.2
+
+#Overall, the ranges appear plausible and fall within expected bounds for the respective variables.
+
+```{r}
+# Question 3: Count days with lowest temperature <= 5°C
+days_below_5 <- sum(akl$TMIN <= 5, na.rm = TRUE)
+
+```
+
+```{r}
+# Question 4: Plot histogram of PRCP
+# Remove non-finite values from PRCP
+precipitation <- akl$PRCP[is.finite(akl$PRCP)]
+
+# Plot histogram of PRCP using base R plotting
+hist(precipitation, breaks = seq(0, max(precipitation) + 5, by = 5),
+     col = "blue", xlab = "Precipitation (mm)", ylab = "Frequency",
+     main = "Distribution of Precipitation")
+
+```
+
+#Answer : The histogram suggests that there are more lower values of precipitation compared to higher values.
+
+```{r}
+# Question 5: Plot density plot of TAVG, TMIN, TMAX
+
+density_tavg <- density(akl$TAVG, na.rm = TRUE)
+density_tmin <- density(akl$TMIN, na.rm = TRUE)
+density_tmax <- density(akl$TMAX, na.rm = TRUE)
+
+bw <- max(c(density_tavg$bw, density_tmin$bw, density_tmax$bw))
+
+# Plot density plots overlaying distributions of TAVG, TMIN, and TMAX
+plot(density_tavg, col = "blue", xlim = c(min(akl$TMIN, na.rm = TRUE), max(akl$TMAX, na.rm = TRUE)), ylim = c(0, max(density_tmax$y, na.rm = TRUE)), lwd = 2, main = "Density Plot of Temperature", xlab = "Temperature (°C)", ylab = "Density")
+lines(density_tmin, col = "red", lwd = 2)
+lines(density_tmax, col = "green", lwd = 2)
+legend("topright", legend = c("TAVG", "TMIN", "TMAX"), col = c("blue", "red", "green"), lwd = 2)
+
+```
+
+```{r}
+# Question 6: Compute the yearly average temperature based on TAVG. Remove any incomplete years (i.e., years that have no data at all for some months). The result should be a data frame named ytemp with columns YEAR and TAVG. Draw a line plot with the years on the x-axis and the average temperature on the y-axis.
+library(magrittr)
+library(dplyr)
+
+# Extract year from DATE column
+akl$YEAR <- as.numeric(substr(akl$DATE, 1, 4))
+
+# Compute yearly average temperature based on TAVG
+ytemp <- akl %>%
+  group_by(YEAR) %>%
+  summarise(TAVG = mean(TAVG, na.rm = TRUE)) %>%
+  filter(!is.na(TAVG))  # Remove incomplete years
+
+# Draw a line plot
+plot(ytemp$YEAR, ytemp$TAVG, type = "l", 
+     xlab = "Year", ylab = "Average Temperature (°C)",
+     main = "Yearly Average Temperature")
+
+```
+
+```{r}
+# Question 7 : Fit a linear model based on ytemp predicting TAVG based on YEAR and print the coefficients. Interpret the coefficient values - what do they mean in this context?
+
+# Fit linear model
+lm_model <- lm(TAVG ~ YEAR, data = ytemp)
+
+# Print coefficients
+coefficients(lm_model)
+
+plot(ytemp$YEAR, ytemp$TAVG, type = "l", 
+     xlab = "Year", ylab = "Average Temperature (°C)",
+     main = "Yearly Average Temperature")
+
+# Add regression line
+abline(lm_model, col = "red")
+
+```
+
+# Answer: the linear model suggests that there is a positive trend in average temperature over the years, with an estimated increase of approximately 0.05997711 degrees Celsius per year.
+
+```{r}
+# Question 8: Compute the average monthly temperature based on TAVG for each year and month. The result should be a matrix mavg with months in columns and years in rows.Use variations on matplot(mavg, type='l') and matplot(t(mavg), type='l') to explore the monthly averages.
+
+# Convert DATE column to proper date object
+akl$DATE <- as.Date(akl$DATE)
+
+# Extract year from DATE column
+akl$YEAR <- as.numeric(substr(akl$DATE, 1, 4))
+
+# Extract month from DATE column
+akl$MONTH <- as.numeric(substr(akl$DATE, 6, 7))
+
+# Compute average monthly temperature based on TAVG for each year and month
+mavg <- akl %>%
+  group_by(YEAR, MONTH) %>%
+  summarise(Avg_Temp = mean(TAVG, na.rm = TRUE)) %>%
+  tidyr::pivot_wider(names_from = MONTH, values_from = Avg_Temp)
+
+# Convert mavg to matrix
+mavg_matrix <- as.matrix(mavg[, -1])  # Exclude the YEAR column for matrix
+
+# Explore the monthly averages using matplot
+matplot(mavg_matrix, type = 'l', xlab = "Month", ylab = "Average Temperature (°C)", main = "Monthly Average Temperature")
+matplot(t(mavg_matrix), type = 'l', xlab = "Year", ylab = "Average Temperature (°C)", main = "Yearly Average Temperature by Month")
+
+```
+

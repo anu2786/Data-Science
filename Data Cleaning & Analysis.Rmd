@@ -1,0 +1,178 @@
+---
+title: "ash945"
+output: html_document
+date: "2024-04-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+##1  
+
+# Read the contents of visits.txt
+file_lines <- readLines("C:\\Users\\ANU\\Documents\\visits.txt")
+fixed_lines <- gsub("^([^,]+),([^,]+),([A-Za-z. ]+),([A-Za-z. ]),([A-Za-z. ]+)$", "\\1,\\2,\\3 \\4 ,\\5", file_lines)
+# Write the modified lines to visits.csv
+writeLines(fixed_lines, "visits.csv")
+visits<-read.csv("visits.csv", header = FALSE)
+
+# Check if V5 is empty for each row
+empty_v5 <- visits$V5 == ""
+
+# Shift the content of V4 to V5 if V5 is empty
+visits$V5[empty_v5] <- visits$V4[empty_v5]
+
+# Leave V4 empty where V5 is empty
+visits$V4[empty_v5] <- ""
+
+visits$V3 <- gsub("^(\\w+)\\s+(.*)$", "\\1 \\2", paste(visits$V4, visits$V3))
+
+# Remove the V4 column
+visits$V4 <- NULL
+
+
+# Store the first row as column names
+colnames(visits) <- as.character(unlist(visits[1, ]))
+
+# Remove the first row from the data frame
+visits <- visits[-1, ]
+
+# Write the data frame to a CSV file
+write.csv(visits, file = "visits.csv", row.names = FALSE)
+print(visits)
+```
+
+
+
+##2
+```{r}
+visits<- read.csv("visits.csv", header = FALSE)
+# Generate a new column V5 containing the last word of each row in V3
+visits$V5 <- sub(".*\\s+(\\w+)$", "\\1", visits$V3)
+
+# Modify V3 to contain only the remaining words
+visits$V3 <- sub("\\s+\\w+$", "", visits$V3)
+# Convert each word in V3 to its first letter
+visits$V3 <- gsub("(\\b\\w)\\w*\\b", "\\1", visits$V3)
+
+# Replace dots with spaces in V3
+visits$V3 <- gsub("\\.", " ", visits$V3)
+visits$V3<-paste(visits$V3,visits$V5)
+visits$V5 <- NULL
+visits$V3 <- trimws(visits$V3, which = "left")
+
+#remove Dr DR from v4
+visits$V4 <- sub("^D[r,R]\\.\\s*", "", visits$V4)
+
+colnames(visits) <- as.character(unlist(visits[1, ]))
+
+# Remove the first row from the data frame
+visits <- visits[-1, ]
+```
+
+```{r}
+write.csv(visits, file = "visits.csv", row.names = FALSE)
+visits<-(read.csv("visits.csv", header = TRUE))
+
+```
+ 
+```{r}
+
+```
+
+
+```{r}
+
+# format dates into yyyy-mm-dd format
+library(lubridate)
+visits$Date <- parse_date_time(visits$Date, orders = c("mdy", "dmy", "ymd"))
+visits$Date <- as.Date(visits$Date)
+
+
+visits$Patient <- gsub("\\s+", " ", visits$Patient)
+```
+
+
+```{r}
+str(visits)
+print(visits)
+```
+##3
+```{r}
+# Compute the number of visits per patient
+visits_per_patient <- table(visits$Patient)
+
+# Print the result
+print(visits_per_patient)
+```
+##4
+```{r}
+split_data <- split(visits, visits$Patient)
+
+# Function to calculate average weeks between visits
+avg_weeks <- function(data) {
+  if(nrow(data) > 1) {
+    dates <- sort(data$Date)
+    diff_dates <- as.numeric(difftime(dates[-1], dates[-length(dates)], units = "weeks"))
+    return(mean(diff_dates))
+  } else {
+    return(NA)
+  }
+}
+
+# Apply the function to each patient's data
+result <- sapply(split_data, avg_weeks)
+
+# Remove NAs (patients that came only once)
+result <- result[!is.na(result)]
+
+# Print the result
+print(result)
+```
+##5
+```{r}
+# Split the data frame by Patient
+split_data <- split(visits, visits$Patient)
+
+# Function to get the last visit for each patient
+last_visit <- function(data) {
+  data[which.max(data$Date), ]
+}
+
+# Apply the function to each patient's data
+last_visits <- do.call(rbind, lapply(split_data, last_visit))
+
+# Create the schedule data frame
+schedule <- data.frame(
+  Date = last_visits$Date + 14,  # Two weeks after the last visit
+  Patient = rownames(last_visits),
+  Doctor = last_visits$Doctor
+)
+
+# Print the resulting data frame
+print(schedule)
+```
+##6
+```{r}
+# Function to adjust the date to the next Tuesday, Wednesday, or Thursday
+adjust_date <- function(date) {
+  weekday <- weekdays(date)
+  if (weekday %in% c("Friday", "Saturday")) {
+    return(date + as.difftime(3, units = "days"))
+  } else if (weekday == "Sunday") {
+    return(date + as.difftime(2, units = "days"))
+  } else if (weekday == "Monday") {
+    return(date + as.difftime(1, units = "days"))
+  } else {
+    return(date)
+  }
+}
+
+# Adjust the dates in the schedule data frame
+schedule$Date <- as.Date(sapply(schedule$Date, adjust_date), origin = "1970-01-01")
+
+# Print the resulting data frame
+print(schedule)
+```
+

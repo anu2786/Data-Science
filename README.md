@@ -60,4 +60,4 @@ Welcome to my Data Science Portfolio! This repository contains various projects 
 - Model Used: GradientBoostingRegressor
 - Accuracy obtained: 99%
 - **Files:**
-- House Price Prediction.ipynb 
+- [House Price Prediction.ipynb ](https://github.com/anu2786/Data-Science/blob/ccb288d31e07e3d65f8bdc35a21c58dbfb68eab5/House%20Price%20Prediction.ipynb)

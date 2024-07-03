@@ -59,5 +59,15 @@ Welcome to my Data Science Portfolio! This repository contains various projects 
 - **Description:** It is your job to predict the sales price for each house. For each Id in the test set, you must predict the value of the SalePrice variable.
 - Model Used: GradientBoostingRegressor
 - Accuracy obtained: 99%
+- Platform: Kaggle
 - **Files:**
 - [House Price Prediction.ipynb ](https://github.com/anu2786/Data-Science/blob/ccb288d31e07e3d65f8bdc35a21c58dbfb68eab5/House%20Price%20Prediction.ipynb)
+
+
+###12. Titanic - Machine Learning from Disaster
+- **Description:** Built a predictive model that answers the question: “what sorts of people were more likely to survive?” using passenger data (ie name, age, gender, socio-economic class, etc).
+- Model Used: RandomForestClassifier
+- Prediction Score:  0.77511
+- Platform: Kaggle
+- 
+- 

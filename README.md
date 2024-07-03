@@ -70,4 +70,4 @@ Welcome to my Data Science Portfolio! This repository contains various projects 
 - Prediction Score:  0.77511
 - Platform: Kaggle
 - **Files:**
-  https://github.com/anu2786/Data-Science/blob/2557c969f5873becfaaa0f63eb775028d60bf6b5/Titanic.ipynb 
+[ Titanic.ipynb](https://github.com/anu2786/Data-Science/blob/bb2dae82e7f6994268fa4375ca515a14805e9bb0/Titanic.ipynb)

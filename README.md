@@ -55,3 +55,8 @@ Welcome to my Data Science Portfolio! This repository contains various projects 
 - **Files:**
   - [Straight Line and Quadratic Regression Models.pdf](Straight%20Line%20and%20Quadratic%20Regression%20Models.pdf)
 
+### 11. House Price Prediction Model
+- **Description:** It is your job to predict the sales price for each house. For each Id in the test set, you must predict the value of the SalePrice variable.
+- Model Used: GradientBoostingRegressor
+- Accuracy obtained: 99%
+- 

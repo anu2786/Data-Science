@@ -87,4 +87,4 @@ The sentiment labels are:
 4 - positive
 - Model Used: LogisticRegression
 - Platform: Kaggle
-- **Files:** https://github.com/anu2786/Data-Science/blob/2d9367bb459ce409f1ced0c6867f3fdb7f7d5481/Logistic%20Reg%20sentim%20analysis.ipynb
+- **Files:** [Logistic Reg sentim analysis.ipynb](https://github.com/anu2786/Data-Science/blob/2d9367bb459ce409f1ced0c6867f3fdb7f7d5481/Logistic%20Reg%20sentim%20analysis.ipynb)

@@ -71,3 +71,20 @@ Welcome to my Data Science Portfolio! This repository contains various projects 
 - Platform: Kaggle
 - **Files:**
 [ Titanic.ipynb](https://github.com/anu2786/Data-Science/blob/bb2dae82e7f6994268fa4375ca515a14805e9bb0/Titanic.ipynb)
+
+
+###13. Sentiment Analysis on Movie Reviews
+- **Description:** Classify the sentiment of sentences from the Rotten Tomatoes dataset. The dataset is comprised of tab-separated files with phrases from the Rotten Tomatoes dataset. The train/test split has been preserved for the purposes of benchmarking, but the sentences have been shuffled from their original order. Each Sentence has been parsed into many phrases by the Stanford parser. Each phrase has a PhraseId. Each sentence has a SentenceId. Phrases that are repeated (such as short/common words) are only included once in the data.
+
+train.tsv contains the phrases and their associated sentiment labels. We have additionally provided a SentenceId so that you can track which phrases belong to a single sentence.
+test.tsv contains just phrases. You must assign a sentiment label to each phrase.
+The sentiment labels are:
+
+0 - negative
+1 - somewhat negative
+2 - neutral
+3 - somewhat positive
+4 - positive
+- Model Used: LogisticRegression
+- Platform: Kaggle
+- **Files:** https://github.com/anu2786/Data-Science/blob/2d9367bb459ce409f1ced0c6867f3fdb7f7d5481/Logistic%20Reg%20sentim%20analysis.ipynb

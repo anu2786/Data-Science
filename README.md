@@ -64,7 +64,7 @@ Welcome to my Data Science Portfolio! This repository contains various projects 
 - [House Price Prediction.ipynb ](https://github.com/anu2786/Data-Science/blob/ccb288d31e07e3d65f8bdc35a21c58dbfb68eab5/House%20Price%20Prediction.ipynb)
 
 
-###12. Titanic - Machine Learning from Disaster
+### 12. Titanic - Machine Learning from Disaster
 - **Description:** Built a predictive model that answers the question: “what sorts of people were more likely to survive?” using passenger data (ie name, age, gender, socio-economic class, etc).
 - Model Used: RandomForestClassifier
 - Prediction Score:  0.77511
@@ -73,7 +73,7 @@ Welcome to my Data Science Portfolio! This repository contains various projects 
 [ Titanic.ipynb](https://github.com/anu2786/Data-Science/blob/bb2dae82e7f6994268fa4375ca515a14805e9bb0/Titanic.ipynb)
 
 
-###13. Sentiment Analysis on Movie Reviews
+### 13. Sentiment Analysis on Movie Reviews
 - **Description:** Classify the sentiment of sentences from the Rotten Tomatoes dataset. The dataset is comprised of tab-separated files with phrases from the Rotten Tomatoes dataset. The train/test split has been preserved for the purposes of benchmarking, but the sentences have been shuffled from their original order. Each Sentence has been parsed into many phrases by the Stanford parser. Each phrase has a PhraseId. Each sentence has a SentenceId. Phrases that are repeated (such as short/common words) are only included once in the data.
 
 train.tsv contains the phrases and their associated sentiment labels. We have additionally provided a SentenceId so that you can track which phrases belong to a single sentence.

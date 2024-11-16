@@ -96,7 +96,7 @@ The sentiment labels are:
 - Performance (RMSE): Mean Model: 6.257842, Linear Regression: 5.087111
 - Tools Used: R, Base R Graphics
 - Outcome: Demonstrated data processing, visualization, and model evaluation for effective insights.
-- **Files** https://github.com/anu2786/Data-Science/blob/7ed141f54d00fb784049a39c604f197284f68a6e/Lab-00-report.Rmd
+- **Files** [https://github.com/anu2786/Data-Science/blob/cef4e66ca7e0aa6c485987c1930b38a4fffdaeb9/Lab-00-report.Rmd](https://github.com/anu2786/Data-Science/blob/cef4e66ca7e0aa6c485987c1930b38a4fffdaeb9/Lab-00-report.Rmd)
 
 
 ### 15. Vehicle Imports Analysis
@@ -106,6 +106,39 @@ The sentiment labels are:
 - Performance (RMSE): Mean Model: 8.379609, Linear Regression: 11.52066
 - Tools Used: Linux Shell, R, Base R Graphics
 - Outcome: Developed Linux skills for processing large datasets and applied predictive modeling to study import trends.
-- **Files** Vehicle Imports Analysis.Rmd 
+- **Files** [Vehicle Imports Analysis.Rmd ](https://github.com/anu2786/Data-Science/blob/919090fed5c01d8333d87df61c645e2a8bc5d09e/Vehicle%20Imports%20Analysis.Rmd)
 
 
+### 16. Currency Exchange Rate Analysis
+- **Description:** Downloaded and analyzed historical Euro currency exchange rates via Frankfurter API. Conducted exploratory data analysis and modeled NZD exchange rates against AUD, GBP, and USD.
+- Shell Tools Used: curl, Shell Scripting
+- Models Used: Linear Regression for currency pair predictions
+- Key Insights: Identified AUD as the currency behaving most similarly to NZD. USD model coefficients interpreted to show practical currency relationships.
+- Tools Used: R, Base R Graphics, Frankfurter API, Shell
+- Outcome: Demonstrated API interaction, structured data processing, exploratory data visualization, and predictive modeling with real-world currency data.
+- **Files** https://github.com/anu2786/Data-Science/blob/614ea916f802d8ea657e805dec0ec7b7f382ac40/Currency%20Exchange%20Rate%20Analysis.Rmd
+
+
+### 17. NYC Taxi Data Analysis 
+- **Description:** Analyzed large NYC ride-sharing datasets to estimate data processing times, predict record counts, analyze monthly trip trends, and study vendor distribution changes over time.
+- Shell Tools Used: bzip2, wc, sort, head, awk
+- R Techniques: File size-based record prediction, RMSE computation, monthly trends plotting
+- Key Insights:
+Processing large datasets is computationally intensive but can be optimized with parallelization and efficient tools.
+Monthly trip data shows significant variation, likely due to external factors like COVID-19.
+Vendor distributions reflect industry dynamics over time.
+- Outcome: Developed robust skills for handling and analyzing large-scale datasets efficiently using shell scripting and R.
+- **Files** https://github.com/anu2786/Data-Science/blob/0003413517ec8718201841594885dfdbd2028c8d/NYC%20Taxi%20Data%20Analysis%20.Rmd
+
+
+### 18. Exploratory and Large Data Analysis
+
+- **Description:** Analyzed NYC HVFHV trip data (January–May 2024) to evaluate distributions, explore relationships between trip metrics, and fit a scalable regression model using chunk-wise processing for large data.
+- Tools Used: R, Parquet Format, arrow::read_parquet(), iotools, biglm
+- Tasks & Insights: Progressive chunk-wise processing using iotools and biglm. Coefficients stabilized with larger data, showing the scalability and robustness of chunk-wise modeling.
+- Key Findings:
+Scalability of Models: Large datasets require efficient processing techniques like chunk-wise analysis.
+Driver Pay Factors: Trip length and time significantly influence pay; vendor-specific factors also contribute.
+Final Model Interpretation: Coefficients for each variable provided actionable insights into pay dynamics.
+- Outcome: Developed skills in analyzing large datasets, identifying meaningful patterns, and implementing scalable regression models. Efficient chunk-wise processing allowed fitting complex models with limited memory resources.
+- **Files** https://github.com/anu2786/Data-Science/blob/c9cfcce1b39fb7a2888ca95ef364dd67a95f8976/Exploratory%20and%20Large%20Data%20Analysis.Rmd

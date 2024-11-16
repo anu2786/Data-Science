@@ -88,3 +88,24 @@ The sentiment labels are:
 - Model Used: LogisticRegression
 - Platform: Kaggle
 - **Files:** https://github.com/anu2786/Data-Science/blob/1520df4f57ea15148e959a15e16204aed85f3de5/Logistic%20Reg%20sentim%20analysis%20(1).ipynb
+
+
+### 14. Car Imports Analysis
+- **Description:** Analyzed New Zealand car imports data by cleaning, transforming, and modeling the dataset to predict import values and explore country-wise patterns.
+- Model Used: Simple Mean, Linear Regression
+- Performance (RMSE): Mean Model: 6.257842, Linear Regression: 5.087111
+- Tools Used: R, Base R Graphics
+- Outcome: Demonstrated data processing, visualization, and model evaluation for effective insights.
+- **Files** https://github.com/anu2786/Data-Science/blob/7ed141f54d00fb784049a39c604f197284f68a6e/Lab-00-report.Rmd
+
+
+### 15. Vehicle Imports Analysis
+- **Description:** Analyzed vehicle import data (HS codes 8703+) using Linux commands and R. Extracted and processed new car imports (select HS codes) from 2000–2021 and predicted import values over time.
+- Shell Tools Used: grep, wc, awk, curl
+- Models Used: Simple Mean, Linear Regression
+- Performance (RMSE): Mean Model: 8.379609, Linear Regression: 11.52066
+- Tools Used: Linux Shell, R, Base R Graphics
+- Outcome: Developed Linux skills for processing large datasets and applied predictive modeling to study import trends.
+- **Files** https://github.com/anu2786/Data-Science/blob/919090fed5c01d8333d87df61c645e2a8bc5d09e/Vehicle%20Imports%20Analysis.Rmd 
+
+

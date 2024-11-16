@@ -1,0 +1,447 @@
+---
+title: "Lab-04"
+author: "ASH945 - Anu Sharma"
+date: "2024-08-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Load necessary libraries
+library(Cairo)
+knitr::opts_chunk$set(dev = "CairoPNG")
+```
+
+
+
+
+## Q1
+
+```{r}
+setwd("~/lab04")
+library(arrow)
+data <- read_parquet("/course/data/nyctaxi/parquet/fhvhv_tripdata_2024-01.parquet")
+summary(data$trip_miles)
+```
+```{r}
+summary(data$trip_time)
+```
+```{r}
+CairoPNG(filename = "plot.png", width = 800, height = 600)
+hist(data$trip_miles, 
+     main = "Trip Miles Distribution", 
+     xlab = "Trip Miles", 
+     col = "blue", 
+     breaks = 50)
+dev.off() 
+```
+```{r}
+CairoPNG(filename = "log_trip_miles_histogram.png", width = 800, height = 600)
+
+# Generate the histogram
+hist(log(data$trip_miles + 1), 
+     main = "Log-Transformed Trip Miles Distribution", 
+     xlab = "Log(Trip Miles + 1)", 
+     col = "blue", 
+     breaks = 50)
+
+# Close the device to save the file
+dev.off()
+```
+
+```{r}
+CairoPNG(filename = "trip_time_histogram.png", width = 800, height = 600)
+
+# Generate the histogram
+hist(data$trip_time, 
+     main = "Trip Time Distribution", 
+     xlab = "Trip Time (seconds)", 
+     col = "green", 
+     breaks = 50)
+
+# Close the device to save the file
+dev.off()
+```
+
+```{r}
+CairoPNG(filename = "log_trip_time_histogram.png", width = 800, height = 600)
+
+# Generate the log-transformed histogram
+hist(log(data$trip_time + 1), 
+     main = "Log-Transformed Trip Time Distribution", 
+     xlab = "Log(Trip Time + 1)", 
+     col = "green", 
+     breaks = 50)
+
+# Close the device to save the file
+dev.off()
+```
+
+**Summary**
+
+- **trip_miles summary** We can see certain trips with zero miles which indicate that there are trips with zero recorded miles. These can be cancelled trips or data entry errors.
+
+- The maximum value of 417.620 miles is unusually high for a city trip, suggesting it might be an outlier or an error.
+
+- The mean (4.839 miles) is higher than the median (2.830 miles), indicating a right-skewed distribution, likely due to a few very long trips.
+
+- The histogram show a high concentration of trips with short distances. Long tail because of few very long trips.
+
+- After log transformation the data became more normalized.
+
+- **trip_time summary** The minimum value of 0 seconds suggests that some trips have no recorded duration, which is implausible and likely indicates an error.
+
+- The maximum value of 52060 seconds (about 14.5 hours) is very long for a single trip within a city, suggesting it could be an outlier or data entry error.
+
+- Right-skewed distribution, potentially influenced by a few very long trips.Can be seen in the raw histogram. Normalized distribution seen after log transformation.
+
+
+## Q2
+
+```{r}
+summary(data$driver_pay)
+```
+```{r}
+summary(data$base_passenger_fare)
+```
+```{r}
+CairoPNG(filename = "driver_pay_histogram.png", width = 800, height = 600)
+
+# Generate the histogram for Driver Pay
+hist(data$driver_pay,
+     main = "Driver Pay Distribution",
+     xlab = "Driver Pay",
+     col = "blue",
+     breaks = 100)
+
+# Close the device to save the file
+dev.off()
+```
+```{r}
+CairoPNG(filename = "log_driver_pay_histogram.png", width = 800, height = 600)
+
+# Generate the log-transformed histogram for Driver Pay
+hist(log(data$driver_pay + 68), 
+     main = "Log-Transformed Driver Pay Distribution", 
+     xlab = "Log(Driver Pay + 68)", 
+     col = "blue", 
+     breaks = 100)
+
+# Close the device to save the file
+dev.off()
+```
+```{r}
+CairoPNG(filename = "base_passenger_fare_histogram.png", width = 800, height = 600)
+
+# Generate the histogram for Base Passenger Fare
+hist(data$base_passenger_fare, 
+     main = "Base Passenger Fare Distribution", 
+     xlab = "Base Passenger Fare", 
+     col = "green",
+     breaks = 50)
+
+# Close the device to save the file
+dev.off()
+```
+
+
+```{r}
+CairoPNG(filename = "log_base_passenger_fare_histogram.png", width = 800, height = 600)
+
+# Generate the log-transformed histogram for Base Passenger Fare
+hist(log(data$base_passenger_fare + 45), 
+     main = "Log-Transformed Base Passenger Fare Distribution", 
+     xlab = "Log(Base Passenger Fare + 45)", 
+     col = "green", 
+     breaks = 50)
+
+# Close the device to save the file
+dev.off()
+
+```
+
+**Solution**
+
+- **driver_pay** : The presence of negative values suggests potential data errors, as driver pay should not be negative.
+
+- The maximum value of $1218.17 seems unusually high and may represent outliers.
+
+- The right-skewed distribution indicates that most drivers earn around the median, with a few earning significantly more.
+
+- **base_passenger_fare**: Negative fares are implausible and likely indicate data entry errors.
+
+- The maximum fare of $1911.16 is extremely high, suggesting possible outliers.
+
+-  I added 68 and 45 respectively to shift the entire distribution into positive territory before applying the log transformation.
+
+
+## Q3
+
+```{r}
+clean_data <- data[data$trip_time > 0 & data$trip_miles > 0 & data$driver_pay > 0, ]
+```
+
+```{r}
+clean_data$trip_time_hours <- clean_data$trip_time / 3600
+```
+
+```{r}
+model <- lm(driver_pay ~ trip_time_hours + trip_miles, data = clean_data)
+
+# Display the model summary
+summary(model)
+```
+
+**Solution**
+
+**Resulting coefficients and their meanings**:  
+1. Intercept (9.240e-01 or approximately 0.924): This is the estimated driver pay when both trip_time_hours and trip_miles are zero. While this specific value may not have practical significance, it provides the baseline from which the effects of trip_time_hours and trip_miles are measured.  
+
+2. Coefficient for trip_time_hours (3.155e+01 or approximately 31.55):  This coefficient indicates that, all else being equal, for each additional hour of trip time, the driver pay increases by approximately $31.55. This makes sense, as longer trip times generally result in higher earnings for drivers.  
+
+3. Coefficient for trip_miles (1.574e+00 or approximately 1.574):  This coefficient suggests that, holding trip time constant, each additional mile traveled increases driver pay by approximately $1.57. This reflects the typical fare structure where longer distances result in higher fares.  
+
+The model provides strong evidence that both trip time (in hours) and trip length (in miles) are significant and meaningful predictors of driver pay.
+
+
+## Q4
+
+```{r}
+predictions <- predict(model, clean_data)
+
+
+residuals <- clean_data$driver_pay - predictions
+
+# Calculate RMSE
+rmse <- sqrt(mean(residuals^2))
+rmse
+```
+
+**Solution**
+
+The RMSE for the model is 3.997, which indicates that, on average, the model's predictions for driver pay differ from the actual pay by approximately $3.997. Given that the mean driver pay is $18.27, this level of error is relatively small, suggesting that the model is performing well and provides accurate predictions. Therefore, the RMSE indicates that the model is a good fit for the data.
+
+
+## Q5
+
+
+
+```{r scatterplot, dev="CairoPNG"}
+# Plot residuals vs fitted values
+CairoPNG(filename = "residuals_vs_fitted.png", width = 800, height = 600)
+
+# Plot residuals vs fitted values
+plot(predictions, residuals, 
+     main = "Residuals vs Fitted Values", 
+     xlab = "Fitted Values (Predicted Driver Pay)", 
+     ylab = "Residuals", 
+     pch = 20, col = "red")
+
+# Add a horizontal line at y=0
+abline(h = 0, col = "blue", lwd = 2)
+
+# Close the device to save the file
+dev.off()
+```
+
+
+
+**Solution**
+
+The residuals vs. fitted values plot shows that the residuals are generally randomly scattered around the zero line, indicating a good overall fit for the model. However, some outliers are visible, where the model's predictions differ significantly from the actual driver pay. These outliers suggest that there are specific trips where the model does not perform as well, potentially due to data entry errors, unusual trip characteristics, or limitations of the linear model. 
+
+
+## Q6
+
+```{r}
+library(iotools)
+library(biglm)
+
+```
+
+```{r, eval=FALSE}
+
+file_path <- "/course/data/nyctaxi/csv/fhvhv_tripdata_2024.csv.xz"
+formula <- driver_pay ~ trip_miles + hvfhs_license_num * trip_time_h
+
+# Initialize the chunk reader
+con <- chunk.reader(xzfile(file_path, "rb"))
+
+# Initialize the model as NULL
+model <- NULL
+
+
+
+# Read and process the data chunkwise
+while (length(chunk <- read.chunk(con))) {
+  
+  data <- dstrsplit(chunk, list(
+    hvfhs_license_num = "character", 
+    dispatching_base_num = NA,        
+    originating_base_num = NA,        
+    request_datetime = NA,           
+    on_scene_datetime = NA,           
+    pickup_datetime = NA,             
+    dropoff_datetime = NA,            
+    PULocationID = NA,                
+    DOLocationID = NA,                
+    trip_miles = "numeric",           
+    trip_time = "numeric",            
+    base_passenger_fare = NA,         
+    tolls = NA,                       
+    bcf = NA,                       
+    sales_tax = NA,                   
+    congestion_surcharge = NA,        
+    airport_fee = NA,                 
+    tips = NA,                        
+    driver_pay = "numeric",           
+    shared_request_flag = NA,         
+    shared_match_flag = NA,           
+    access_a_ride_flag = NA,          
+    wav_request_flag = NA,            
+    wav_match_flag = NA               
+  ), sep = ",", strict = FALSE)
+  
+  # Convert to data frame
+  data <- as.data.frame(data)
+  
+  # Filter out implausible values
+  data <- data[data$trip_miles > 0 & data$trip_time > 0 & data$driver_pay > 0, ]
+  
+  
+  data$trip_time_h <- as.numeric(data$trip_time) / 3600
+  data$trip_miles <- as.numeric(data$trip_miles)
+  data$driver_pay <- as.numeric(data$driver_pay)
+  
+  # Fit or update the model
+  if (is.null(model)) {
+    # Initial model fit
+    model <- biglm(formula, data)
+  } else {
+    # Update the model with the new chunk
+    model <- update(model, data)
+  }
+  
+  # Print the current model summary after each chunk
+  print(summary(model))
+}
+
+
+
+# Final model summary
+print(summary(model))
+```
+
+**Output**
+
+For first and last chunk  
+
+Large data regression model: biglm(formula, data)  
+Sample size =  169977   
+                                       Coef    (95%     CI)     SE p  
+(Intercept)                          8.0916  7.9936  8.1896 0.0490 0  
+trip_miles                           1.1565  1.1436  1.1695 0.0065 0  
+hvfhs_license_numHV0005             -1.8966 -2.0843 -1.7090 0.0938 0  
+trip_time_h                         43.7154 43.3464 44.0843 0.1845 0  
+hvfhs_license_numHV0005:trip_time_h -3.6630 -4.1794 -3.1465 0.2582 0  
+
+
+Large data regression model: biglm(formula, data)  
+Sample size =  100707199   
+                                       Coef    (95%     CI)     SE p  
+(Intercept)                          1.0015  0.9999  1.0032 0.0008 0  
+trip_miles                           1.5926  1.5924  1.5929 0.0001 0  
+hvfhs_license_numHV0005             -0.6122 -0.6155 -0.6090 0.0016 0  
+trip_time_h                         32.6652 32.6591 32.6713 0.0031 0  
+hvfhs_license_numHV0005:trip_time_h  0.4768  0.4688  0.4848 0.0040 0  
+
+
+**Comments**
+
+As more chunks are processed, the coefficients stabilize, indicating the model is becoming more accurate as it incorporates more data. This is typical in large-scale regression models, where early fluctuations diminish as more data is included.
+
+
+**Final Model Interpretation:**    
+
+1. Intercept (1.0015): This represents the baseline pay for a trip when all other factors are zero. It indicates that, even without any miles or time, the base pay starts at around 1 unit.  
+
+2. Trip Miles (1.5926): For every additional mile driven, the driver's pay increases by approximately 1.59 units. This suggests that distance is a significant factor in determining pay.  
+
+3. hvfhs_license_numHV0005 (-0.6122): Drivers with the license number HV0005 earn about 0.61 units less compared to drivers with other license numbers, indicating that the license type has a negative effect on the base pay.  
+
+4.Trip Time (32.6652): For every additional hour of driving, the driver's pay increases by about 32.67 units. This highlights that time spent on the trip is a critical factor in pay calculation.  
+
+5. Interaction Term hvfhs_license_numHV0005
+(0.4768): This term indicates that for drivers with the HV0005 license, each additional hour of driving increases pay by an additional 0.48 units compared to other drivers. It shows a positive interaction between trip time and this specific license type, slightly offsetting the negative impact of the HV0005 license on the base pay.  
+
+In summary, the model demonstrates that both distance and time are key determinants of driver pay, with specific variations based on the driver's license type.
+
+## Q7
+
+```{r, eval=FALSE}
+# Function to calculate RMSE
+calculate_rmse <- function(total_squared_error, total_samples) {
+  sqrt(total_squared_error / total_samples)
+}
+
+# Initialize accumulators
+total_squared_error <- 0
+total_samples <- 0
+
+# Initialize model as NULL
+model <- NULL
+
+# Define the file path and formula for the model
+file_path <- "/course/data/nyctaxi/csv/fhvhv_tripdata_2024.csv.xz"
+formula <- driver_pay ~ trip_miles + hvfhs_license_num * trip_time_h
+
+# Initialize the chunk reader
+con <- chunk.reader(xzfile(file_path, "rb"))
+
+# Process chunks
+while (length(chunk <- read.chunk(con))) {
+  # Clean and preprocess data
+  data <- clean_data(data)
+  
+  # Fit or update the model
+  if (is.null(model)) {
+    model <- biglm(formula, data)
+  } else {
+    model <- update(model, data)
+  }
+
+  # Predict for this chunk
+  predictions <- predict(model, data)
+  
+  # Calculate the squared error for this chunk
+  residuals <- data$driver_pay - predictions
+  squared_error <- sum(residuals^2, na.rm = TRUE)
+  
+  # Accumulate squared errors and sample count
+  total_squared_error <- total_squared_error + squared_error
+  total_samples <- total_samples + nrow(data)
+}
+
+# Calculate final RMSE
+final_rmse <- calculate_rmse(total_squared_error, total_samples)
+print(paste("Final RMSE:", final_rmse))
+
+```
+
+**Output**
+
+[1] "Final RMSE: 3.52545727295017"
+
+In summary, while biglm efficiently handles large data for model fitting, it does not allow for the direct computation of RMSE during the fitting process because it does not retain all individual predictions and actual values. RMSE must be computed in a separate step after the model is fully fitted.
+
+
+## Q8
+
+**Summary**  
+
+- In Lab 04, we analyzed NYC taxi data to predict driver pay using linear regression.  
+- The data was vast, requiring chunk-wise processing with the biglm package to avoid memory issues. 
+- We cleaned the data by filtering out invalid rows and transforming trip_time into hours.
+- The model was progressively updated with each chunk, refining the coefficients for trip_miles, trip_time, and hvfhs_license_num. 
+- The process also involved calculating the Root Mean Square Error (RMSE) to assess model accuracy. 
+- Throughout the lab, we dealt with challenges like handling large datasets and ensuring accurate model predictions. The final model provided insights into factors affecting driver pay, with a calculated RMSE indicating prediction reliability.
+

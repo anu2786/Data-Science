@@ -1,0 +1,222 @@
+---
+title: "Lab01"
+output: html_document
+date: "2024-07-29"
+---
+
+# 1
+```{bash eval=FALSE}
+#creating directory for this lab
+mkdir /course/users/ash945/lab01
+#navigating to this directory
+cd /course/users/ash945/lab01
+```
+
+# 2
+```{bash}
+ls -lh /course/data/trade/vehicles
+```
+# 3
+```{bash}
+wc -l /course/data/trade/vehicles/vehicles-2020.csv
+```
+# 4
+```{bash}
+grep 8703231915 /course/data/trade/vehicles/vehicles-*.csv > car-imports.data
+```
+
+To count the number of lines in the new file
+```{bash}
+wc -l car-imports.data
+```
+# 5
+```{bash}
+awk -F, '{print $2}' /course/data/trade/vehicles/vehicles-*.csv | sort | uniq -c | sort -n | tail -5
+```
+# 6
+```{bash}
+grep -E "8703218006|8703228003|8703238003|8703248003|8703211915|8703221915|8703231915|8703241915" /course/data/trade/vehicles/vehicles-*.csv > new-car-imports.csv
+
+```
+
+# 7
+```{r}
+cars <- read.csv("new-car-imports.csv")
+```
+
+# 8
+```{r}
+# Read the CSV file into R
+cars <- read.csv("new-car-imports.csv", header = FALSE)
+
+# Inspect the structure of the data frame to verify the number of columns
+str(cars)
+
+# Rename columns based on the structure
+colnames(cars) <- c("Month", "HSC", "HSDescription", "Unit", "Country", "VFD", "CIF", "Quantity", "Status")
+
+# Extract the YYYYMM part from the Month column
+cars$Month <- as.integer(sub(".*/vehicles-(\\d{4}).csv:(\\d{6})", "\\2", cars$Month))
+
+# Convert numeric columns
+cars$VFD <- as.numeric(gsub(",", "", cars$VFD))
+cars$CIF <- as.numeric(gsub(",", "", cars$CIF))
+cars$Quantity <- as.numeric(gsub(",", "", cars$Quantity))
+
+# Create a Date column from the cleaned Month column
+cars$Date <- as.Date(paste0(substr(cars$Month, 1, 4), "-", substr(cars$Month, 5, 6), "-01"))
+# Display the structure to confirm changes
+str(cars)
+
+# Print the first few rows to verify the transformations
+head(cars)
+
+
+```
+# 9
+```{r}
+total_import <- aggregate(cars$VFD, by = list(cars$Country), FUN = sum)
+colnames(total_import) <- c("Country", "Total_VFD")
+
+# Create a bar plot of total imported value by country
+barplot(total_import$Total_VFD, names.arg = total_import$Country, las = 2, cex.names = 0.7, main = "Total Imported Value by Country", ylab = "Total VFD", col = "blue", cex.axis =0.5)
+```
+
+This creates an overcrowded plot. Import values for some countries cannot be seen because of large disparity of values.So one solution can be to focus on Top 10 or Top 15 countries.
+
+```{r}
+sorted_data <- total_import[order(-total_import$Total_VFD),]
+top_countries <- head(sorted_data, 15)
+
+barplot(top_countries$Total_VFD, names.arg = top_countries$Country, las = 2, cex.names = 0.7, main = "Total Imported Value by Top 15 Countries", ylab = "Total VFD", col = "blue", cex.axis=0.5)
+```
+
+Another solution can be Log Transformation.
+```{r}
+total_import$Log_Total_VFD <- log(total_import$Total_VFD) 
+
+barplot(total_import$Log_Total_VFD, 
+        names.arg = total_import$Country, 
+        las = 2, 
+        cex.names = 0.7, 
+        main = "Log-Transformed Total Imported Value by Country", 
+        ylab = "Log(Total VFD)", 
+        col = "blue",
+        cex.axis = 0.5)  
+```
+ 
+ After applying a logarithmic transformation to the total imported values (VFD) for all countries, the bar plot becomes significantly more readable. The transformation compresses high values and expands lower values, enhancing visibility for countries with smaller import volumes. This balanced representation allows for improved comparability across the entire range of data, preventing a few countries with exceptionally high values from dominating the plot. 
+
+# 10
+
+
+```{r}
+aggregated_data <- xtabs(VFD ~ Date + HSC, data = cars)
+
+# Plotting the data
+matplot(as.Date(rownames(aggregated_data)), aggregated_data, type = "l",
+        xlab = "Month", ylab = "Total Imported Value (VFD)",
+        main = "Evolution of Import Value by HS Code over Time",
+        lwd = 2, col = rainbow(ncol(aggregated_data)))
+
+# Adding a legend
+legend("topright", legend = colnames(aggregated_data), col = rainbow(ncol(aggregated_data)), lwd = 2,cex=0.5)
+```
+
+Cars with HSC code  8703238003 were leading the market from 2000 to 2017 but after that the import suddenly dropped. Cars with 8703231915 HSC code took dominance after 2017. These findings underscore the importance of continuously monitoring market trends and adapting strategies to align with changing consumer preferences and regulatory environments.
+
+
+
+# 11
+```{r}
+# Filter data for Germany
+ger <- subset(cars, Country == "Germany")
+
+# Scale VFD to millions of NZD
+ger <- transform(ger, VFD = VFD / 1e6)
+
+# Sort data by time (Month)
+ger <- ger[order(ger$Month),]
+
+# Split data into training (first 90%) and test (remaining 10%) sets
+ntrain <- floor(nrow(ger) * 0.90)
+gtrain <- ger[1:ntrain,]
+gtest  <- ger[-(1:ntrain),]
+
+# Baseline: overall mean model
+m0 <- mean(gtrain$VFD)
+
+# Linear model
+m1 <- lm(VFD ~ Month, data = gtrain)
+
+```
+
+
+```{r}
+# Calculate RMSE for the predictions of the two models on the test set
+RMSE <- function(obs, pred) sqrt(mean((obs - pred)^2))
+
+obs <- gtest$VFD
+
+# RMSE for global mean model
+rmse_mean <- RMSE(obs, rep(m0, length(obs)))
+
+# RMSE for linear model
+rmse_linear <- RMSE(obs, predict(m1, gtest))
+
+# Print RMSE results
+cat("RMSE for mean model:", rmse_mean, "\n")
+cat("RMSE for linear model:", rmse_linear, "\n")
+
+```
+
+```{r}
+# Plot the model predictions
+plot(ger$Month, ger$VFD, type = 'l', 
+     main = "Monthly Car Import Value from Germany",
+     xlab = "Month", ylab = "Value for Duty (in millions NZD)")
+
+# Add horizontal line for mean model
+abline(h = m0, col = 4, lwd = 2)
+
+# Add regression line for linear model
+abline(m1, col = 2, lwd = 2)
+
+```
+
+# Observations from the Plot
+
+The mean model provides a constant prediction that does not account for any time-based trends or patterns.
+The linear model attempts to fit a trend over time but, in this case, does not significantly outperform the mean model.
+The close RMSE values suggest that neither model captures all the underlying variability in the data, indicating potential areas for further investigation and improvement.
+
+The linear model is not sensible for predicting monthly car import values (VFD) from Germany, as its RMSE (4.666494) is higher than the mean model's RMSE (4.584363). This suggests a weak linear relationship between Month and VFD. Other factors likely influence import values, and a simple linear trend doesn't capture the data's variability. Considering non-linear models and additional predictors could improve accuracy.
+
+# 12
+# Summary
+
+**Objective:**
+To analyze vehicle import data from New Zealand using Unix shell commands and perform data analysis in R.
+
+**1. Data Cleaning:**
+  Imported new-car-imports.csv into R.
+  Renamed columns for clarity.
+  Converted numeric columns from strings with thousand separators to proper numeric types.
+  Created a Date column from the Month column for accurate analysis.
+  
+**2. Exploratory Data Analysis:**
+Bar Plot: Total imported value by country highlighted the dominance of a few countries. Log transformation helped visualize smaller import values.
+Line Plot: Showed trends and shifts in HS codes over time, indicating changes in import preferences and market dynamics.
+
+**3. Model Performance:**
+
+RMSE for Mean Model: 4.584363
+RMSE for Linear Model: 4.666494
+The mean model slightly outperformed the linear regression model, suggesting the linear model did not capture a strong linear trend.
+
+**Conclusion:**
+The data cleaning process ensured accurate analysis, but the linear model did not significantly improve predictions over the mean model. This highlights the need for more complex models and additional predictors to better capture data variability and underlying trends.
+
+
+
+

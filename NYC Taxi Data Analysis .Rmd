@@ -1,0 +1,280 @@
+---
+title: "Lab03"
+author: "ASH945 - Anu Sharma"
+date: "2024-08-12"
+output: html_document
+---
+
+## Q1.
+```{bash, eval=FALSE }
+time bzcat /course/data/nyctaxi/csv/fhvhv/fhvhv_tripdata_2023-01.csv.bz2 | wc -l
+```
+**Output**
+
+18479032  
+
+real	1m26.062s  
+user	1m24.536s  
+sys	0m10.816s
+
+
+
+
+
+
+```{bash, eval=FALSE}
+# total files in fhvhv Directory
+ls /course/data/nyctaxi/csv/fhvhv/*.bz2 | wc -l
+```
+**Output**
+48
+
+
+**Solution:**
+
+
+No. of lines: 18479032  
+Time Taken: 1 minute 26 seconds (or 86.062 seconds).  
+Estimated Processing Time for 2020 Data:  
+12 * 86.062 = 1032.744 seconds = 17 minutes 21 seconds  
+
+To estimate the time taken for All Files in the fhvhv Directory:  
+48 * 86.02 = 4128.96 seconds = 68 minutes approx  
+
+
+## Q2
+```{bash, eval=FALSE}
+time ls /course/data/nyctaxi/csv/fhvhv/fhvhv_tripdata_2020-*.bz2 | parallel -j+0 'bzcat {} | wc -l' > sizes-2020.txt
+```
+**Output**
+
+real	1m49.597s  
+user	11m46.461s  
+sys	1m11.918s  
+
+```{bash, eval=FALSE}
+cat sizes-2020.txt
+```
+
+**Output**
+
+4312910  
+6090000  
+7555194  
+9958455  
+11096853  
+11637124  
+11596866  
+12106670  
+13392929  
+13268412  
+20569369  
+21725101  
+
+
+
+**Solution**
+
+- The earlier estimate for sequential processing was calculated by multiplying the time for processing a single file by the number of files (12 for 2020), resulting in an estimate of around 17.2 minutes.
+- The actual elapsed time using parallel processing was significantly shorter at 1m49.597s, showing the efficiency gained by parallel processing.
+- This demonstrates that parallel processing can greatly reduce the wall-clock time required for tasks involving large datasets, even though the total CPU time is higher.
+
+
+## Q3
+
+```{r}
+line_counts <- scan("sizes-2020.txt")
+```
+```{r}
+# Get the file paths for 2020 data
+file_paths <- Sys.glob("/course/data/nyctaxi/csv/fhvhv/fhvhv_tripdata_2020-*.bz2")
+
+# Get file sizes
+file_sizes <- sapply(file_paths, function(x) file.info(x)$size)
+
+# Combine into a data frame
+data <- data.frame(File_Size = file_sizes, Line_Counts = line_counts)
+```
+
+```{r}
+# Fit a linear model
+model <- lm(Line_Counts ~ File_Size, data = data)
+
+# Summary of the model
+summary(model)
+```
+```{r}
+# Predictions on training data
+predictions <- predict(model, data)
+
+# Compute RMSE
+rmse <- sqrt(mean((predictions - data$Line_Counts)^2))
+rmse
+```
+```{r}
+# Plot the data and the model
+plot(data$File_Size, data$Line_Counts, xlab = "File Size (bytes)", ylab = "Number of Records",
+     main = "File Size vs Number of Records (2020 Data)")
+abline(model, col = "red")
+
+```
+```{r}
+# Get file size for January 2023
+jan_2023_size <- file.info("/course/data/nyctaxi/csv/fhvhv/fhvhv_tripdata_2023-01.csv.bz2")$size
+
+# Predict the number of records
+predicted_2023 <- predict(model, newdata = data.frame(File_Size = jan_2023_size))
+
+predicted_2023
+```
+
+**Solution**
+
+**Linear Model Summary:**
+
+- The linear model fitted to predict the number of records based on file size has a low R-squared value (0.1497), indicating that only about 15% of the variability in the number of records is explained by the file size.
+- The p-value for the file size coefficient (0.214) is not statistically significant, suggesting that file size may not be a good predictor of the number of records in this case.
+- The residual standard error is quite large (4971000), indicating substantial variability in the model’s predictions.
+
+**RMSE:**
+
+The RMSE of the model is 4,537,559. This value indicates that the model's predictions can be off by millions of records.
+
+**Plot**
+
+The plot generated also does not show any linear relationship as the linear fit is not capturing all the points. 
+
+**Model Prediction**
+
+The model predicted 9,459,747 records for the January 2023 file, which is significantly lower than the actual number of records (18,479,032). This further suggests that the model is not accurately capturing the relationship between file size and the number of records.
+
+## Q4
+
+```{r}
+
+# Generate predictions for each month
+predictions <- predict(model, data)
+
+# Create a sequence of months
+months <- seq(as.Date("2020-01-01"), by = "month", length.out = 12)
+
+# Plot the predicted number of trips over time
+plot(months, predictions, type = "o", col = "blue",
+     xlab = "Month", ylab = "Predicted Number of Trips",
+     main = "Predicted Number of Trips Per Month in 2020")
+
+# Add actual data points for comparison
+points(months, data$Line_Counts, type = "p", col = "red")
+legend("topright", legend = c("Predicted", "Actual"), col = c("blue", "red"), pch = 1)
+```
+
+
+**Solution**
+
+Here there is a mismatch between the actual value and the predicted value. This suggests that the model does not capture the complexities of the data.
+
+
+## Q5
+
+**Process for 2020**
+```{bash, eval=FALSE}
+bzcat /course/data/nyctaxi/csv/fhvhv/fhvhv_tripdata_2020-03.csv.bz2 |
+tail -n +2 |  # This command skips the first line
+cut -d' ' -f1 |
+sort -T /course/users/ash945/lab-3 -S50m |
+uniq -c > vendor_trips_2020-03_cleaned.txt
+```
+
+
+```{bash}
+cat vendor_trips_2020-03_cleaned.txt
+```
+**Output**
+
+9836781 HV0003  
+ 336606 HV0004  
+3219541 HV0005  
+
+
+**Process for 2021**
+
+```{bash, eval=FALSE}
+bzcat /course/data/nyctaxi/csv/fhvhv/fhvhv_tripdata_2021-03.csv.bz2 |
+tail -n +2 |
+cut -d' ' -f1 |
+sort -T /course/users/ash945/lab-3 -S50m |
+uniq -c > vendor_trips_2021-03_cleaned.txt
+```
+
+
+```{bash}
+cat vendor_trips_2021-03_cleaned.txt
+```
+
+**Output**
+
+10173376 HV0003  
+ 107314 HV0004  
+3946703 HV0005  
+
+
+
+**Solution**
+
+**Summary Of Results**
+
+1. HV0003:
+
+- March 2020: 9,836,781 trips
+- March 2021: 10,173,376 trips
+- Change: Slight increase, suggesting stable or growing demand.
+
+
+2. HV0004:
+
+- March 2020: 336,606 trips
+- March 2021: 107,314 trips
+- Change: Significant decrease, potentially indicating a decline in market share or service reduction.
+
+
+3. HV0005:
+
+- March 2020: 3,219,541 trips
+- March 2021: 3,946,703 trips
+- Change: Increase, possibly due to expanding services or rising popularity.
+
+
+
+## Q6
+
+## Summary Of The Report
+
+This report delves into the processing and analysis of large datasets, focusing on the High Volume For-Hire Vehicle (HVFHV) trip records in New York City for the years 2020 and 2021. 
+
+**Key Findings**
+
+**1. Decompression and Line Counting:**
+
+- The decompression of the fhvhv_tripdata_2023-01.csv.bz2 file and line counting took approximately 1 minute and 22 seconds, with a total of 18,479,032 lines.
+- Based on this, it was estimated that decompressing and counting lines for all data in 2020 would take significantly longer, considering the larger dataset size.
+
+**2. Parallel Processing:**
+
+- Parallel processing was used to count lines in each compressed file for the year 2020.
+- The processing time for this task was approximately 1 minute and 49 seconds, indicating that parallel processing was effective for handling large datasets.
+
+**3. Modeling and Prediction:**
+
+- A linear model was created to predict the number of records based on file size. The model had limited predictive power, as indicated by a high RMSE of approximately 4,537,559.
+- The prediction for January 2023's trip count was 9,459,747, which was significantly lower than the actual 18,479,032 trips, highlighting the model's inaccuracy.
+
+**4. Trip Distribution Analysis:**
+
+- HV0003: Increased from 9,836,781 trips in March 2020 to 10,173,376 trips in March 2021, indicating stable or growing demand.
+- HV0004: Decreased from 336,606 trips to 107,314 trips, suggesting potential operational challenges or a decrease in market share.
+- HV0005: Increased from 3,219,541 trips to 3,946,703 trips, reflecting growth and likely expansion or increased popularity.
+
+
+**Conclusion:**
+
+This report successfully demonstrates the challenges and strategies in handling large datasets. Through the use of shell commands for data management and R for modeling and analysis, the study provides valuable insights into the performance of ride-sharing vendors over a year. 

@@ -1,0 +1,155 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+pagetitle: Lab-00
+---
+
+# STATS 769 Lab 00
+
+## The Data Set
+
+The dataset records monthly car imports into Aotearoa New Zealand. It includes the year/month, country, count and value (in NZD).
+
+```{r echo=FALSE}
+writeLines(readLines("car-imports.csv")[1:6])
+```
+
+## Tasks
+
+
+### Import
+
+1. The following code reads the CSV file into R to produce a data frame.
+   
+   ```{r}
+   ## read data
+   cars <- read.csv("car-imports.csv")
+   ```
+   ```{r}
+   head(cars)
+   ```
+
+### Clean
+
+2. Variables `vfd`, `cif` and `Imports.Qty` contain numbers with additional comma as a separator, so those must be removed and converted to numerics.
+   
+   ```{r}
+   for (col in c("vfd", "cif", "Imports.Qty"))
+       cars[[col]] <- as.numeric(gsub(",","",cars[[col]]))
+   ```
+   
+3. The variable `Month` is encoded as `YYYYMM` which makes it non-contiguous as integers. We convert it to a `Date` - picking the first day of the month for simplicitly (note that the middle or end of the month may also be sensibe as it is a sum of the entire month's imports).
+
+   ```{r}
+   cars$Month <- as.Date(paste(
+       substr(cars$Month, 1, 4),
+       substr(cars$Month, 5, 6),
+       "01", sep="-"))
+   ```
+   ```{r}
+   str(cars)
+   ```
+
+### Explore
+
+3. The following plots the number of months that imports are present in the data for each country.
+   
+   ```{r}
+   par(mar=c(2,12,0.5,0.5))
+   ct <- sort(table(cars$Country), FALSE)
+   barplot(ct, horiz=TRUE, las=1, cex.names=0.8)
+   ```
+   
+   The bar plot shows us in how many months there have been any car imports from that country. We should check the range of the data:
+   
+   ```{r}
+   range(cars$Month)
+   ```
+   
+   This tells us that the data contains years 2017-2021, so the maximum number is 60 (5 * 12). This matches our plot with the maximum of 60, but some countries don't have import entries for every month. The bar chart does not show the volume nor value.
+   
+   There are consistent imports from 8 countries, while some countries figure only rarely.
+   
+   One surprising fact is to see New Zealand on the list. Further digging reveals that the dataset contains re-imports, i.e., goods that have been imported, exported and then imported back.
+   
+   We also plot total imported value (`vfd`) by country.
+   
+   ```{r}
+   par(mar=c(2,12,0.5,0.5))
+   cv <- sort(xtabs(vfd ~ Country, cars))
+   barplot(cv, horiz=TRUE, las=1, cex.names=0.8)
+   ```
+   
+   By far the largest value of car imports is from Japan - more 3x larger than any other country. It is followed by South Korea, Germany and Thailand. Due to the highly skewed values it would be meaningful to use square-root or log transformation:
+
+   ```{r}
+   par(mar=c(2,12,0.5,0.5))
+   barplot(cv, horiz=TRUE, las=1, cex.names=0.8, log="x")
+   ```
+   
+### Model
+
+4. The following code creates a subset of imports from Germany only and then splits the resulting data into training (90%) and test (10%) sets. We also scale the `vfd` variable to millions NZD for easier interpretation.
+
+   ```{r}
+   ger <- subset(cars, Country=="Germany")
+   ## scale vfd to millions NZD
+   ger <- transform(ger, vfd=vfd/1e6)
+   ## in time order
+   ger <- ger[order(ger$Month),]
+   
+   ## split in 90/10% by time - that is
+   ## first 90% points are the training set
+   ntrain <- nrow(ger) * 0.90
+   gtrain <- ger[1:ntrain,]
+   ## the other 10% are the test set
+   gtest  <- ger[-(1:ntrain),]
+   ```
+
+   We compute the global mean as a simple prediction and also fit a linear model.
+   ```{r}
+   ## baseline: overall mean
+   (m0 <- mean(gtrain$vfd))
+   ## linear model
+   (m1 <- lm(vfd ~ Month, gtrain))
+   ```
+
+   We define a simple `RMSE()` function to calculate the root mean square error.
+
+   ```{r}
+   RMSE <- function(obs, pred) sqrt(mean((obs - pred)^2))
+   ```
+
+   We compare the predictions for the tests between the two models.
+   ```{r}
+   ## observed values in the test data
+   obs <- gtest$vfd
+   ## global mean
+   RMSE(obs, m0)
+   ## linear model prediction on the test data
+   RMSE(obs, predict(m1, gtest))
+   ```
+
+   The linear model is better. We plot the results to have a better understanding of the models.
+   
+   ```{r}
+   plot(ger$Month, ger$vfd, ty='l',
+        main="Monthly Car Import Value from Germany",
+        xlab="Year", ylab="Value for Duty (in millions NZD)")
+   abline(h=m0, col=4, lwd=2)
+   abline(m1, col=2, lwd=2)
+   ```
+   
+   The imports were declining between 2017 and 2020, where the linear trend is quite sensible. The linear model is able to capture this decline while a constant model cannot.
+   
+   COVID-19 effect in 2020 has depressed imports which have slightly rebounded in 2021 making up for it. Therefore any model will have touble accounting for the COVID-19 effect (unusually lower 2020, higher 2021), our model does a reasonable job given that it does not have that information.
+   
+   There also appears to be some seasonality to the imports, in particular in the early years (large drops in February), so there is room for impovement if additional variables such month of the year were added.
+
+
+## Summary
+
+In this lab we explored the overseas trade dataset recording imports of particular class of cars into New Zealand. The dateset needed cleaning due to the representation of the numbers and dates. The dataset covers years 2017-2021. Imports vary over time in that from some contries cars are imported constantly, whereas other countries supply them sporadically. The biggest supplier (by value) is Japan with total value more than three times larger than any other country. The total import values by country are highly skewed, thus a transformation would be advisable for furhter processing.
+
+We have then focused on imports from one particular country: Germany. The overall volume has been decreasing which was well captured by a simple linear model, outperforming a simple constant mean. However, there is still a lot of unexplained variation, partially due to the COVID-19 effect in years 2020/2021 and inherent seasonality in the imports.

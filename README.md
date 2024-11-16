@@ -106,6 +106,6 @@ The sentiment labels are:
 - Performance (RMSE): Mean Model: 8.379609, Linear Regression: 11.52066
 - Tools Used: Linux Shell, R, Base R Graphics
 - Outcome: Developed Linux skills for processing large datasets and applied predictive modeling to study import trends.
-- **Files** https://github.com/anu2786/Data-Science/blob/919090fed5c01d8333d87df61c645e2a8bc5d09e/Vehicle%20Imports%20Analysis.Rmd 
+- **Files** Vehicle Imports Analysis.Rmd 
 
 

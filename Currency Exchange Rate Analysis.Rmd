@@ -1,0 +1,223 @@
+---
+title: "Lab02"
+author: "ASH945 - Anu Sharma"
+date: "2024-08-03"
+output: html_document
+---
+
+## 1) Download the Exchange Rate for 2023 Between Euro and NZD
+
+```{bash, eval=FALSE}
+curl -o nzd-2023.json "https://api.frankfurter.app/2023-01-01..2023-12-31?from=EUR&to=NZD"
+```
+
+
+## 2) Download the Exchange Rate from 2020 to 2023 for Multiple Currencies
+
+```{bash, eval=FALSE}
+curl -o long.json "https://api.frankfurter.app/2020-01-01..2023-12-31?from=EUR&to=USD,GBP,AUD,NZD"
+```
+
+
+## 3) Read the nzd-2023.json file into R 
+```{r}
+library(jsonlite)
+
+# Read the JSON file
+nzd_data <- fromJSON("nzd-2023.json")
+
+# Convert to a data frame
+nzd <- data.frame(
+  date = as.Date(names(nzd_data$rates)),
+  nzd = unlist(nzd_data$rates)
+)
+
+# Display the structure
+str(nzd)
+```
+
+## 4) Read long.json into R and Create a Matrix
+
+```{r}
+# Read the JSON file
+long_data <- fromJSON("long.json")
+
+# Convert to a matrix
+rates.m <- do.call(rbind, lapply(long_data$rates, unlist))
+
+# Set the row and column names
+rownames(rates.m) <- names(long_data$rates)
+colnames(rates.m) <- names(long_data$rates[[1]])
+
+# Display the structure
+str(rates.m)
+```
+
+## 5) Exploratory Data Analysis on nzd Data Frame
+
+```{r}
+summary(nzd)
+```
+```{r}
+plot(nzd$date, nzd$nzd, type = "l", col = "blue", main = "NZD Exchange Rate (2023)", xlab = "Date", ylab = "NZD Rate")
+```
+
+* The nzd data frame was analyzed using summary statistics and visualized using a line plot of the exchange rates over time. The summary statistics provided insights into the overall distribution of the NZD exchange rate throughout 2023.
+* The summary statistics suggest that the NZD exchange rate fluctuated within a relatively narrow range throughout 2023, with a slight upward trend observed towards the end of the year. There is a gradual increase from the 1st quartile to the 3rd quartile, indicating a consistent rise in the exchange rate over time. 
+* This trend can be seen clearly in the plot also. 
+
+
+## 6) Quality Check on rates.m Matrix
+
+```{r}
+
+summary(rates.m)
+```
+
+```{r}
+matplot(as.Date(rownames(rates.m)), rates.m, type = "l", lty = 1, col = 1:ncol(rates.m),
+        xlab = "Date", ylab = "Exchange Rate", main = "Exchange Rates (2020-2023)")
+legend("topright", legend = colnames(rates.m), col = 1:ncol(rates.m), lty = 1)
+```
+
+* The date patterns are different between the nzd and rates data frames due to the different time periods they cover. 
+* The nzd data frame only includes dates from January 1, 2023, to December 31, 2023.
+* The rates data frame includes dates from January 1, 2020, to some point in 2024.
+
+
+
+## 7) Plot of all the exchange rates over time
+
+```{r}
+matplot(as.Date(rownames(rates.m)), rates.m, type = "l", lty = 1, col = 1:ncol(rates.m),
+        xlab = "Date", ylab = "Exchange Rate", main = "Exchange Rates vs EUR")
+legend("topright", legend = colnames(rates.m), col = 1:ncol(rates.m), lty = 1,cex = 0.4, pt.cex = 0.4)
+```
+
+
+## 8) Verify : NZD exchange rates in nzd should be a subset of rates.m
+
+```{r}
+# Convert the row names of rates.m (which contain the dates) to Date format
+rates_dates <- as.Date(rownames(rates.m))
+
+# Filter the rates.m matrix to include only data from the year 2023
+rates_m_2023 <- rates.m[format(rates_dates, "%Y") == "2023", ]
+
+# Isolate the NZD exchange rates from this filtered data
+nzd_from_rates_m <- rates_m_2023[, "NZD"]
+
+# Now, ensure the dates from nzd and filtered rates.m align exactly
+nzd_dates <- nzd$date
+aligned_dates <- intersect(nzd_dates, as.Date(rownames(rates_m_2023)))
+
+# Subset both nzd and nzd_from_rates_m based on these aligned dates
+nzd_subset <- nzd$nzd[nzd$date %in% aligned_dates]
+nzd_from_rates_m_subset <- nzd_from_rates_m[as.Date(rownames(rates_m_2023)) %in% aligned_dates]
+
+# Compare the NZD exchange rates
+are_rates_equal <- all(nzd_subset == nzd_from_rates_m_subset)
+
+# Output the result
+are_rates_equal
+
+
+```
+**METHOD:**
+
+* Filtered the rates.m matrix to include only the NZD exchange rates for the year 2023.
+* Extracted and aligned the dates between the nzd data frame and the filtered rates.m matrix.
+* Compared the NZD exchange rates across the aligned datasets.
+
+**CONCLUSION:**
+
+* The comparison yielded a result of TRUE, confirming that the NZD exchange rates in the nzd data frame are identical to those in the rates.m matrix for the corresponding dates in 2023.
+* This analysis demonstrates that the nzd data frame contains a consistent and accurate subset of NZD exchange rates that are fully represented within the broader rates.m matrix for the year 2023. The data can be considered reliable for further analysis.
+
+
+## 9) Pairwise scatterplots between all currencies
+
+```{r}
+rates <- data.frame(
+  NZD = rates_m_2023[, "NZD"],
+  USD = rates_m_2023[, "USD"],
+  GBP = rates_m_2023[, "GBP"],
+  AUD = rates_m_2023[, "AUD"]
+)
+
+# Create pairwise scatterplots between the selected currencies
+pairs(rates, pch=19, col=4)
+```
+
+**CONCLUSION**
+
+* Using the rates_m_2023 data frame, pairwise scatterplots were generated to compare the behavior of the New Zealand Dollar (NZD) with other currencies, specifically USD, GBP, and AUD.
+* The scatterplot between NZD and AUD shows the strongest linear relationship, indicating that AUD behaves similarly to NZD.
+* The scatterplots between NZD and GBP, and NZD and USD, show weaker relationships, suggesting these currencies do not move as closely with NZD.
+* The Australian Dollar (AUD) behaves the most similarly to the New Zealand Dollar (NZD), likely due to the economic ties and geographic proximity between Australia and New Zealand.
+
+
+
+## 10) Linear Models
+
+```{r}
+# Assuming 'rates' contains the selected currencies and 'NZD' as columns
+
+# Fit linear models
+model_aud <- lm(NZD ~ AUD, data = rates)
+model_gbp <- lm(NZD ~ GBP, data = rates)
+model_usd <- lm(NZD ~ USD, data = rates)
+
+# Print the coefficients of each model
+cat("Coefficients for AUD model:\n")
+print(coef(model_aud))
+cat("\nCoefficients for GBP model:\n")
+print(coef(model_gbp))
+cat("\nCoefficients for USD model:\n")
+print(coef(model_usd))
+
+# Calculate RMSE for each model
+rmse <- function(actual, predicted) {
+  sqrt(mean((actual - predicted)^2))
+}
+
+
+rmse_aud <- rmse(rates$NZD, predict(model_aud))
+rmse_gbp <- rmse(rates$NZD, predict(model_gbp))
+rmse_usd <- rmse(rates$NZD, predict(model_usd))
+
+cat("\nRMSE for AUD model:", rmse_aud, "\n")
+cat("RMSE for GBP model:", rmse_gbp, "\n")
+cat("RMSE for USD model:", rmse_usd, "\n")
+
+
+```
+
+
+**Interpretation of USD Model:**
+
+* The intercept of 1.3731 represents the expected NZD exchange rate when the USD exchange rate is zero. However, this is not practically meaningful.
+* The slope of 0.3595 suggests that a 1 unit increase in the USD exchange rate results in an approximately 0.3595 unit increase in the NZD exchange rate, indicating a direct relationship between the two currencies.
+
+**Best Model Based on RMSE:**
+
+* The AUD model has the lowest RMSE, indicating the best fit for predicting NZD exchange rates. This suggests that AUD and NZD have the closest relationship among the three currencies tested, which matches the expectation from the pairwise scatterplot analysis.
+
+
+
+
+## 12) Summary of Findings 
+
+In Lab 02, we explored currency exchange rate data using APIs and R to understand the relationships between the New Zealand Dollar (NZD) and other major currencies (AUD, GBP, USD).
+
+**Data Collection and Processing:**
+Exchange rates were downloaded using the Frankfurter API and processed into data frames for analysis. Data spanned from 2020 to 2023, with a specific focus on 2023 for NZD.
+
+**Exploratory Analysis:**
+Summary statistics and visualizations revealed patterns in exchange rates over time. A line plot and pairwise scatterplots suggested that AUD had the most similar behavior to NZD.
+
+**Modeling:**
+Linear models were fitted to predict NZD using AUD, GBP, and USD. The AUD model had the lowest RMSE, indicating it was the best predictor of NZD.
+
+**Conclusion:**
+AUD was identified as the currency most closely aligned with NZD, confirming initial visual observations and demonstrating the utility of linear modeling in financial data analysis.
